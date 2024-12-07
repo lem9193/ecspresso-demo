@@ -1,0 +1,90 @@
+name: ecsoreso workflow
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  SYS_NAME: ecspresso-demo
+  CLUSTER: cluster
+  SERVICE: service
+  TAG: ${{ github.sha }} # コミットハッシュを取得
+  APPLICATION_NAME: ecs-app
+  DEPLOYMENT_GROUP_NAME: ecs-deploy-group
+  ECR_URI: ${{ secrets.ECR_URI }} # シークレットからECR URIを取得
+
+jobs:
+  initialize:
+    runs-on: ubuntu-latest
+    permissions: read-all
+    outputs:
+      app_changed: ${{ steps.filter.outputs.app }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # appディレクトリ以下のファイル変更を検知
+      - name: Detect File Changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          base: ${{ github.event.before }}
+          filters: |
+            app:
+              - 'app/main.go'
+              - 'app/ecspresso/**'
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [initialize]
+    # appディレクトリ以下のファイル変更があった場合のみデプロイを実行
+    if: |
+      github.event_name == 'push' &&
+      needs.initialize.outputs.app_changed == 'true'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
+          aws-region: ap-northeast-1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.5
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.ECR_URI }}:${{ github.sha }}
+
+      - name: Set up ecspresso
+        uses: kayac/ecspresso@v2
+        with:
+          version: latest
+
+      - run: |
+          ecspresso deploy --config ecspresso/ecspresso.jsonnet
+        working-directory: app

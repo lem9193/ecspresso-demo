@@ -4,8 +4,7 @@ set -e
 cd $(dirname $0)
 
 ACTION=$1
-ENV=$2
-SYSNAME=$3
+GIT_REPO=$(cat .env | grep GIT_REPO | cut -d '=' -f2)
 
 case $ACTION in
 check)

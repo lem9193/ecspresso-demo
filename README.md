@@ -50,9 +50,16 @@
    ```
 
 3. 環境変数の設定
+
    ```bash
    cp app/.env.example app/.env
    # .envファイルを編集して必要な値を設定
+   ```
+
+4. デプロイ用のシェルスクリプトのパーミッションを変更
+
+   ```bash
+   chmod +x infra/cdk.sh app/ecspresso.sh
    ```
 
 ## デプロイ方法

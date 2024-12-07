@@ -6,6 +6,7 @@ import { Props } from '../bin/main';
 import { Alb } from './construct/alb';
 import { CodeDeploy } from './construct/codedeploy';
 import { Ecs } from './construct/ecs';
+import { Iam } from './construct/iam';
 import { Network } from './construct/network';
 import { ParameterStore } from './construct/parameter-store';
 
@@ -45,6 +46,10 @@ export class EcspressoDemoStack extends cdk.Stack {
       testListener: alb.testListener,
       blueTargetGroup: alb.blueTg,
       greenTargetGroup: alb.greenTg,
+    });
+
+    new Iam(this, 'Iam', {
+      ...props,
     });
   }
 }

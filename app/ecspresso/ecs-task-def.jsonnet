@@ -6,7 +6,7 @@ local ssm = std.native('ssm');
   containerDefinitions: [
     {
       name: must_env('SYS_NAME') + '-container',
-      image: must_env('REPO') + ':' + must_env('TAG'),
+      image: must_env('ECR_URI') + ':' + must_env('TAG'),
       cpu: 0,
       portMappings: [
         {

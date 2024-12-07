@@ -4,15 +4,16 @@ set -e
 cd $(dirname $0)
 
 ACTION=$1
+ECR_URI=$(cat .env | grep ECR_URI | cut -d '=' -f2)
+
 case $ACTION in
+
 login)
-  REPO=$(cat .env | grep REPO | cut -d '=' -f2)
-  aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $REPO
+  aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $ECR_URI
   ;;
 push)
-  REPO=$(cat .env | grep REPO | cut -d '=' -f2)
-  docker build -t $REPO:latest .
-  docker push $REPO:latest
+  docker build -t $ECR_URI:latest .
+  docker push $ECR_URI:latest
   ;;
 verify)
   ecspresso verify --config ecspresso/ecspresso.jsonnet --envfile=.env
