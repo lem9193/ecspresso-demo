@@ -8,6 +8,7 @@
 
 ```
 .
+├── .github/ # Github Actions用設定ファイル
 ├── README.md
 ├── app/ # アプリケーションコード
 │ └── ecspresso/ # ecspresso用設定ファイル
